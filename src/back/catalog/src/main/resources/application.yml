@@ -1,0 +1,66 @@
+spring:
+  profiles:
+    active: development
+  application:
+    name: catalog
+eureka:
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+services:
+  user-management:
+    name: user-management
+  file-storage:
+    name: file-storage
+---
+
+spring:
+  config:
+    activate:
+      on-profile: development
+  h2:
+    console.enabled: true
+  datasource:
+    url: jdbc:h2:mem:test_catalog;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+#  sql:
+#    init:
+#      mode: always
+#      schema-locations: classpath:create.sql
+#      data-locations: classpath:init.sql
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        hbm2ddl:
+          auto: create-drop
+  cache:
+    type: redis
+eureka:
+  client:
+    service-url:
+      default-zone: http://localhost:8761/eureka
+#  session:
+#    store-type: redis
+#eureka:
+#  client:
+#    fetch-registry: false
+#    register-with-eureka: false
+---
+
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: jdbc:postgresql://catalog-db:8011/diploma
+    username: postgres
+    password: Isafold21
+  cache:
+    type: redis
+
+---

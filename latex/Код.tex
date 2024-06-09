@@ -1,0 +1,844 @@
+\appendix{Фрагменты исходного кода программы}
+
+ArtistController.java
+\begin{lstlisting}[language=java]
+	package com.mymusic.catalog.controllers;
+	
+	import com.mymusic.catalog.domain.dto.album.AlbumOfArtistPreviewDto;
+	import com.mymusic.catalog.domain.dto.artist.ArtistDto;
+	import com.mymusic.catalog.services.AlbumService;
+	import com.mymusic.catalog.services.ArtistService;
+	import org.springframework.http.HttpStatus;
+	import org.springframework.http.ResponseEntity;
+	import org.springframework.web.bind.annotation.*;
+	
+	import java.util.List;
+	
+	@RestController
+	@RequestMapping("/artists")
+	@CrossOrigin()
+	public class ArtistController {
+		
+		private final ArtistService artistService;
+		private final AlbumService albumService;
+		
+		public ArtistController(ArtistService artistService, AlbumService albumService) {
+			this.artistService = artistService;
+			this.albumService = albumService;
+		}
+		
+		@GetMapping("/{id}")
+		public ResponseEntity<ArtistDto> getArtistById(@PathVariable("id") Long id) {
+			return artistService.getArtistById(id)
+			.map( value -> {
+				return new ResponseEntity<>(value, HttpStatus.OK);
+			})
+			.orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+		}
+		
+		
+		@GetMapping("/{id}/albums")
+		public ResponseEntity<ArtistDto> getArtistAlbums(@PathVariable("id") Long id) {
+			return artistService.getArtistById(id)
+			.map( value -> {
+				List<AlbumOfArtistPreviewDto> albums = albumService.findArtistAlbums(id);
+				value.setAlbums(albums);
+				return new ResponseEntity<>(value, HttpStatus.OK);
+			})
+			.orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+		}
+	}
+	
+\end{lstlisting}
+
+AlbumController.java
+\begin{lstlisting}[language=java]
+	package com.mymusic.catalog.controllers;
+	
+	import com.mymusic.catalog.domain.dto.album.AlbumDto;
+	import com.mymusic.catalog.mappers.AlbumMapper;
+	import com.mymusic.catalog.services.AlbumService;
+	import com.mymusic.catalog.services.TrackService;
+	import org.springframework.http.HttpStatus;
+	import org.springframework.http.ResponseEntity;
+	import org.springframework.web.bind.annotation.*;
+	
+	@RestController
+	@RequestMapping("/albums")
+	@CrossOrigin()
+	public class AlbumController {
+		
+		private final AlbumService albumService;
+		private final TrackService trackService;
+		
+		public AlbumController(AlbumService albumService, TrackService trackService) {
+			this.albumService = albumService;
+			this.trackService = trackService;
+		}
+		
+		@GetMapping("/{id}")
+		public ResponseEntity<AlbumDto> getAlbumById(@PathVariable("id") Long id) {
+			return albumService.findAlbumById(id)
+			.map(value -> {
+				AlbumDto albumDto = AlbumMapper.INSTANCE.toAlbumDto(value);
+				albumDto.setTracks(trackService.getTracksInAlbum(value.getId()));
+				return new ResponseEntity<>(albumDto, HttpStatus.OK);
+			})
+			.orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+		}
+	}	
+\end{lstlisting}
+
+PlaylistController.java
+\begin{lstlisting}[language=java]
+package com.mymusic.catalog.controllers;
+
+import com.mymusic.catalog.domain.dto.playlist.*;
+import com.mymusic.catalog.domain.dto.track.PlaylistTrackModifyDto;
+import com.mymusic.catalog.exceptions.ResourceNotFoundException;
+import com.mymusic.catalog.services.PlaylistService;
+import com.mymusic.catalog.util.HeaderStorage;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/playlists")
+@RequiredArgsConstructor
+public class PlaylistController {
+	
+	private final PlaylistService playlistService;
+	
+	@GetMapping(path = "/{id}", produces = "application/json")
+	public ResponseEntity<PlaylistDetailsDto> getPlaylistInfo(@PathVariable("id") Long id) {
+		try {
+			return ResponseEntity.ok(playlistService.getPlaylistInfoById(id));
+		} catch (IllegalStateException e) {
+			return ResponseEntity.internalServerError().build();
+		} catch (ResourceNotFoundException e) {
+			return ResponseEntity.notFound().build();
+		}
+	}
+	
+	@GetMapping(path = "/{id}/tracks")
+	public ResponseEntity<PlaylistTracklistDto> getPlaylistTracklist(@PathVariable("id") Long id) {
+		return ResponseEntity.ok(playlistService.getPlaylistTracklist(id));
+	}
+	
+	@GetMapping()
+	public ResponseEntity<List<PlaylistPreviewDto>> getUserPlaylists() {
+		Long id = Long.parseLong(HeaderStorage.getMyHeader());
+		
+		return ResponseEntity.ok(playlistService.getPlaylistsByUserId(id));
+	}
+	
+	@PostMapping()
+	public ResponseEntity<PlaylistCreatedDto> createNewPlaylist(@RequestBody CreatePlaylistRequestDto newPlaylist) {
+		try {
+			Long playlistId = playlistService.createNewPlaylist(newPlaylist);
+			return ResponseEntity.status(HttpStatus.CREATED).body(new PlaylistCreatedDto(playlistId));
+		}
+		catch (Exception e) {
+			return ResponseEntity.internalServerError().build();
+		}
+	}
+	
+	@DeleteMapping("/{id}")
+	public ResponseEntity<?> deletePlaylist(@PathVariable Long id) {
+		try {
+			playlistService.removePlaylistById(id);
+			return ResponseEntity.ok().build();
+		}
+		catch (Exception e) {
+			return ResponseEntity.notFound().build();
+		}
+	}
+	
+	@PostMapping(path = "/{id}/tracks")
+	public ResponseEntity<?> addTracksToPlaylist(
+	@RequestBody PlaylistTrackModifyDto tracks,
+	@PathVariable Long id
+	) {
+		try {
+			PlaylistTracklistDto tracklist = playlistService.addTracksToPlaylist(id, tracks.getTrackIds());
+			return ResponseEntity.ok(tracklist);
+		}
+		catch (Exception e) {
+			return ResponseEntity.notFound().build();
+		}
+	}
+	
+	@DeleteMapping(path = "/{id}/tracks")
+	public ResponseEntity<PlaylistTracklistDto> removeTracksFromPlaylist(
+	@RequestBody PlaylistTrackModifyDto tracks,
+	@PathVariable("id") Long id
+	) {
+		try {
+			PlaylistTracklistDto tracklist = playlistService.removeTracksFromPlaylist(id, tracks.getTrackIds());
+			return ResponseEntity.ok(tracklist);
+		}
+		catch (Exception e) {
+			return ResponseEntity.notFound().build();
+		}
+	}
+	
+}
+
+\end{lstlisting}
+
+SearchController.java
+\begin{lstlisting}[language=java]
+	package com.mymusic.catalog.controllers;
+	
+	import com.mymusic.catalog.domain.dto.response.BooleanResponse;
+	import com.mymusic.catalog.domain.dto.track.TrackInfoDto;
+	import com.mymusic.catalog.services.TrackService;
+	import org.springframework.http.ResponseEntity;
+	import org.springframework.web.bind.annotation.GetMapping;
+	import org.springframework.web.bind.annotation.PathVariable;
+	import org.springframework.web.bind.annotation.RequestMapping;
+	import org.springframework.web.bind.annotation.RestController;
+	
+	@RestController
+	@RequestMapping("/tracks")
+	public class TrackController {
+		
+		private final TrackService trackService;
+		
+		public TrackController(TrackService trackService) {
+			this.trackService = trackService;
+		}
+		
+		@GetMapping("/{id}/exists")
+		public ResponseEntity<BooleanResponse> isTrackExists(@PathVariable Long id) {
+			return ResponseEntity.ok().body(
+			trackService.isTrackExists(id)
+			);
+		}
+		
+		@GetMapping("/{id}/info")
+		public ResponseEntity<TrackInfoDto> getTrackInfo(@PathVariable("id") Long id) {
+			return trackService.getTrackInfo(id)
+			.map(ResponseEntity::ok)
+			.orElse(ResponseEntity.notFound().build());
+		}
+	}
+\end{lstlisting}
+
+ArtistService.java
+\begin{lstlisting}[language=java]
+	package com.mymusic.catalog.services;
+	
+	import com.mymusic.catalog.domain.dto.artist.ArtistDto;
+	import com.mymusic.catalog.domain.dto.artist.ArtistPreviewDto;
+	import com.mymusic.catalog.mappers.AlbumMapper;
+	import com.mymusic.catalog.mappers.ArtistMapper;
+	import com.mymusic.catalog.repos.ArtistsRepository;
+	import org.springframework.stereotype.Service;
+	
+	import java.util.List;
+	import java.util.Optional;
+	
+	@Service
+	public class ArtistService {
+		
+		private final ArtistsRepository artistsRepository;
+		
+		public ArtistService(ArtistsRepository artistsRepository) {
+			this.artistsRepository = artistsRepository;
+		}
+		
+		public List<ArtistPreviewDto> getArtistsByName(String name) {
+			return artistsRepository.findByNameContaining(name)
+			.stream().map(artist -> {
+				return ArtistMapper.INSTANCE.artistToArtistPreviewDto(artist);
+			}).toList();
+		}
+		
+		public Optional<ArtistDto> getArtistById(Long id) {
+			return artistsRepository.findById(id)
+			.map(artist -> {
+				ArtistDto artistDto = new ArtistDto();
+				artistDto.setId(artist.getId());
+				artistDto.setName(artist.getName());
+				artistDto.setBio(artist.getBio());
+				artistDto.setImageUrl(artist.getImageUrl());
+				artistDto.setAlbums(AlbumMapper.INSTANCE.albumsToAlbumOfArtistPreviewDtos(artist.getAlbums()));
+				return artistDto;
+			});
+		}
+		
+		public Optional<ArtistDto> getArtistWithAlbums(Long id) {
+			return artistsRepository.findById(id)
+			.map(artist -> {
+				ArtistDto artistDto = ArtistMapper.INSTANCE.artistToArtistDto(artist);
+				artistDto.setId(artist.getId());
+				return artistDto;
+			});
+		}
+	}
+	
+\end{lstlisting}
+
+AlbumService.java
+\begin{lstlisting}[language=java]
+	package com.mymusic.catalog.services;
+	
+	import com.mymusic.catalog.domain.dto.album.AlbumOfArtistPreviewDto;
+	import com.mymusic.catalog.domain.entities.Album;
+	import com.mymusic.catalog.mappers.AlbumMapper;
+	import com.mymusic.catalog.repos.AlbumRepository;
+	import jakarta.transaction.Transactional;
+	import org.springframework.stereotype.Service;
+	
+	import java.util.List;
+	import java.util.Optional;
+	
+	@Service
+	@Transactional
+	public class AlbumService {
+		
+		private final AlbumRepository albumRepository;
+		
+		public AlbumService(AlbumRepository albumRepository) {
+			this.albumRepository = albumRepository;
+		}
+		
+		public Optional<Album> findAlbumById(Long id) {
+			return albumRepository.findById(id);
+		}
+		
+		public List<AlbumOfArtistPreviewDto> findArtistAlbums(Long artistId) {
+			return albumRepository.findAlbumsByArtistId(artistId)
+			.stream().map(AlbumMapper.INSTANCE::albumToAlbumOfArtistPreviewDto)
+			.toList();
+		}
+		
+	}
+	
+\end{lstlisting}
+
+PlaylistService.java
+\begin{lstlisting}[language=java]
+	package com.mymusic.catalog.services;
+	
+	import com.mymusic.catalog.clients.UserManagementClient;
+	import com.mymusic.catalog.domain.dto.owner.OwnerPreviewDto;
+	import com.mymusic.catalog.domain.dto.playlist.*;
+	import com.mymusic.catalog.domain.dto.track.TrackPreviewInPlaylistDto;
+	import com.mymusic.catalog.domain.entities.Playlist;
+	import com.mymusic.catalog.exceptions.PlaylistNotFoundException;
+	import com.mymusic.catalog.exceptions.UserNotFoundException;
+	import com.mymusic.catalog.mappers.PlaylistMapper;
+	import com.mymusic.catalog.repos.PlaylistRepository;
+	import com.mymusic.catalog.domain.entities.Track;
+	import lombok.RequiredArgsConstructor;
+	import org.slf4j.Logger;
+	import org.slf4j.LoggerFactory;
+	import org.springframework.stereotype.Service;
+	
+	import java.util.*;
+	
+	@Service
+	@RequiredArgsConstructor
+	public class PlaylistService {
+		
+		private final Logger LOGGER = LoggerFactory.getLogger(PlaylistService.class);
+		
+		private final PlaylistRepository playlistRepository;
+		private final TrackService trackService;
+		//private final LikesClient likesClient;
+		private final UserManagementClient userManagementClient;
+		
+		public List<PlaylistPreviewDto> getPlaylistsByUserId(Long id) {
+			var l =  playlistRepository.getPlaylistsByUserId(id);
+			var pl = l.stream().map(playlist -> {
+				LOGGER.debug(playlist.getName());
+				return new PlaylistPreviewDto(
+				playlist.getId(),
+				playlist.getName(),
+				playlist.getCoverUrl()
+				);
+			}).toList();
+			
+			return pl;
+		}
+		
+		public Set<Track> getTracksByPlaylistId(long playlistId) {
+			return playlistRepository.findTracksByPlaylistId(playlistId)
+			.orElse(Collections.emptySet());
+		}
+		
+		public Optional<Playlist> getPlaylistById(long playlistId) {
+			return playlistRepository.findById(playlistId);
+		}
+		
+		public Long createNewPlaylist(CreatePlaylistRequestDto newPlaylist) throws Exception {
+			var userExists = userManagementClient
+			.isUserExists(newPlaylist.getOwnerId());
+			
+			if (!userExists.isExists()) {
+				throw new UserNotFoundException(newPlaylist.getOwnerId());
+			}
+			
+			Playlist playlist = new Playlist();
+			
+			playlist.setName(newPlaylist.getName());
+			playlist.setDescription(newPlaylist.getDescription());
+			playlist.setCoverUrl(newPlaylist.getCover());
+			playlist.setUserId(newPlaylist.getOwnerId());
+			
+			playlist = playlistRepository.save(playlist);
+			addTracksToPlaylist(playlist.getId(), newPlaylist.getTrackIds());
+			
+			return playlist.getId();
+		}
+		
+		public void removePlaylistById(Long id) throws Exception {
+			Playlist playlist = playlistRepository.findPlaylistById(id)
+			.orElseThrow(() -> new Exception("Playlist not found"));
+			
+			playlistRepository.delete(playlist);
+		}
+		
+		public Optional<PlaylistDto> getPlaylistDtoById(Long id) {
+			
+			Optional<Playlist> playlistOptional = playlistRepository.findPlaylistById(id);
+			
+			return playlistOptional.map(playlist -> {
+				PlaylistDto playlistDto = new PlaylistDto();
+				playlistDto.setId(playlist.getId());
+				playlistDto.setName(playlist.getName());
+				playlistDto.setDescription(playlist.getDescription());
+				playlistDto.setUserId(playlist.getUserId());
+				playlistDto.setCoverUrl(playlist.getCoverUrl());
+				
+				Optional<List<TrackPreviewInPlaylistDto>> tracklistOptional = trackService.getTracksWithCoverInPlaylist(id);
+				List<TrackPreviewInPlaylistDto> tracks = tracklistOptional.orElseGet(ArrayList::new);
+				playlistDto.setTracks(tracks);
+				
+				return playlistDto;
+			});
+		}
+		
+		public PlaylistTracklistDto addTracksToPlaylist(Long id, Iterable<Long> trackIds) throws Exception {
+			Playlist playlist = playlistRepository.findPlaylistById(id)
+			.orElseThrow(() -> new Exception("Playlist not found"));
+			
+			List<Track> tracks = trackService.getTracksByIds(trackIds);
+			
+			for (Track t : tracks) {
+				playlist.addTrack(t);
+			}
+			
+			playlist = playlistRepository.save(playlist);
+			return PlaylistMapper.INSTANCE.toPlaylistTracklistDto(playlist);
+		}
+		
+		public PlaylistTracklistDto removeTracksFromPlaylist(Long id, Iterable<Long> trackIds) throws Exception {
+			Playlist playlist = playlistRepository.findPlaylistById(id)
+			.orElseThrow(() -> new Exception("Playlist not found"));
+			
+			List<Track> tracks = trackService.getTracksByIds(trackIds);
+			
+			for (Track t : tracks) {
+				playlist.removeTrack(t);
+			}
+			
+			playlist = playlistRepository.save(playlist);
+			return PlaylistMapper.INSTANCE.toPlaylistTracklistDto(playlist);
+		}
+		
+		public List<PlaylistPreviewDto> getRandomPlaylistsContainingLikedTracks() {
+			return null;
+		}
+		
+		public PlaylistDetailsDto getPlaylistInfoById(Long id)
+		throws IllegalStateException, PlaylistNotFoundException, UserNotFoundException {
+			Playlist playlist = playlistRepository.findPlaylistById(id)
+			.orElseThrow(() -> new PlaylistNotFoundException(id));
+			
+			OwnerPreviewDto owner = userManagementClient.getUserPreview(playlist.getUserId());
+			
+			PlaylistDetailsDto playlistInfo = PlaylistMapper.INSTANCE.playlistToPlaylistInfoDto(playlist);
+			playlistInfo.setOwner(owner);
+			
+			return playlistInfo;
+		}
+		
+		public PlaylistTracklistDto getPlaylistTracklist(Long playlistId) {
+			Set<Track> tracks = playlistRepository.findTracksByPlaylistId(playlistId)
+			.orElse(Collections.emptySet());
+			PlaylistTracklistDto tracklist = new PlaylistTracklistDto();
+			tracklist.setTracks(tracks);
+			return tracklist;
+		}
+	}
+	
+\end{lstlisting}
+
+LikeService.java
+\begin{lstlisting}[language=java]
+	package com.mymusic.likes.services;
+	
+	import com.mymusic.likes.clients.CatalogClient;
+	import com.mymusic.likes.clients.UserManagerClient;
+	import com.mymusic.likes.entities.Like;
+	import com.mymusic.likes.repos.LikeRepository;
+	import lombok.RequiredArgsConstructor;
+	import org.springframework.stereotype.Service;
+	
+	import java.util.List;
+	import java.util.Optional;
+	
+	@Service
+	@RequiredArgsConstructor
+	public class LikeService {
+		
+		private final LikeRepository likeRepository;
+		private final UserManagerClient userManagerClient;
+		private final CatalogClient catalogClient;
+		
+		public Optional<List<Like>> getUserLikes(Long userId) {
+			if (validateUser(userId)) {
+				return Optional.of(
+				likeRepository.findLikeByUserId(userId));
+			}
+			else {
+				return Optional.empty();
+			}
+		}
+		
+		public Optional<List<Like>> getTrackLikes(Long trackId) {
+			if (validateTrack(trackId)) {
+				return Optional.of(
+				likeRepository.findLikeByUserId(trackId));
+			}
+			else {
+				return Optional.empty();
+			}
+		}
+		
+		public boolean save(Like like) {
+			if (validateUser(like.userId()) && validateTrack(like.trackId())) {
+				likeRepository.save(like);
+				return true;
+			}
+			else return false;
+		}
+		
+		public boolean delete(Like like) {
+			if (validateUser(like.userId()) && validateTrack(like.trackId())) {
+				likeRepository.delete(like);
+				return true;
+			}
+			else return false;
+		}
+		
+	}
+	
+\end{lstlisting}
+
+AudioStreamLoader.java
+\begin{lstlisting}[language=java]
+	package com.mymusic.storage.services;
+	
+	
+	import com.mymusic.storage.exceptions.ResourceNotFoundException;
+	import com.mymusic.storage.utils.RangeValuesUtils;
+	import lombok.RequiredArgsConstructor;
+	import org.slf4j.Logger;
+	import org.slf4j.LoggerFactory;
+	import org.springframework.stereotype.Service;
+	import org.springframework.util.StringUtils;
+	import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+	
+	import java.io.ByteArrayInputStream;
+	import java.io.IOException;
+	import java.io.InputStream;
+	
+	
+	@Service
+	@RequiredArgsConstructor
+	public class AudioStreamLoader {
+		
+		private static final Logger LOGGER = LoggerFactory.getLogger(AudioStreamLoader.class);
+		
+		private final S3Service s3Service;
+		private final RangeValuesUtils rangeValuesUtils;
+		
+		public record StreamingResponseResult(
+		long start,
+		long end,
+		long filesize,
+		StreamingResponseBody body
+		) {
+			public long getContentLength() {
+				return  (end - start) + 1;
+			}
+		}
+		
+		private StreamingResponseResult loadPartialMediaFromStorage(
+		byte[] bytes,
+		long startPos,
+		long endPos
+		) throws ResourceNotFoundException, IOException {
+			StreamingResponseBody responseStream;
+			
+			long filesize = bytes.length;
+			
+			if (startPos < 0L) {
+				startPos = 0;
+			}
+			if (filesize > 0L)
+			{
+				if (startPos >= filesize)
+				{
+					startPos = filesize - 1L;
+				}
+				
+				if (endPos >= filesize)
+				{
+					endPos = filesize - 1L;
+				}
+			}
+			else
+			{
+				startPos = 0L;
+				endPos = 0L;
+			}
+			byte[] buffer = new byte[1024];
+			
+			long finalEndPos = endPos;
+			long finalStartPos = startPos;
+			responseStream = outputStream -> {
+				try (InputStream is = new ByteArrayInputStream(bytes)) {
+					is.skip(finalStartPos);
+					long pos = finalStartPos;
+					int bytesRead;
+					while (pos <= finalEndPos && (bytesRead = is.read(buffer, 0, (int) Math.min(buffer.length, finalEndPos - pos + 1))) != -1) {
+						outputStream.write(buffer, 0, bytesRead);
+						pos += bytesRead;
+					}
+					outputStream.flush();
+				}
+			};
+			
+			return new StreamingResponseResult(startPos, endPos, filesize, responseStream);
+		}
+		
+		public StreamingResponseResult loadPartialMediaFromStorage(
+		Long id,
+		String rangeValues
+		) throws ResourceNotFoundException, IOException, IllegalArgumentException {
+			
+			var bytes = s3Service.getTrackObject(id);
+			
+			if (!StringUtils.hasText(rangeValues))
+			{
+				return loadEntireMediaFile(bytes);
+			}
+			
+			long fileSize = bytes.length;
+			long[] ranges = rangeValuesUtils.extractRangeValues(rangeValues);
+			long rangeStart = ranges[0];
+			long rangeEnd = ranges[1];
+			
+			
+			if ((rangeEnd == 0L || rangeEnd == -1L) && fileSize > 0L)
+			{
+				rangeEnd = fileSize - 1;
+			}
+			if (fileSize < rangeEnd)
+			{
+				rangeEnd = fileSize - 1;
+			}
+			
+			return loadPartialMediaFromStorage(bytes, rangeStart, rangeEnd);
+		}
+		
+		public StreamingResponseResult loadEntireMediaFile(
+		byte[] bytes
+		) throws IOException
+		{
+			long fileSize = bytes.length;
+			long endPos;
+			if (fileSize > 0L)
+			{
+				endPos = fileSize - 1;
+			}
+			else
+			{
+				endPos = 0L;
+			}
+			
+			return loadPartialMediaFromStorage(bytes, 0, endPos);
+		}
+	}
+\end{lstlisting}
+
+AuthenticationController.java
+\begin{lstlisting}[language=java]
+	package com.mymusic.auth.controllers;
+	
+	import com.mymusic.auth.domain.entities.Token;
+	import com.mymusic.auth.domain.requests.LoginDto;
+	import com.mymusic.auth.services.AuthenticationService;
+	import jakarta.servlet.http.Cookie;
+	import jakarta.servlet.http.HttpServletResponse;
+	import lombok.RequiredArgsConstructor;
+	import org.springframework.http.HttpStatus;
+	import org.springframework.http.ResponseEntity;
+	import org.springframework.security.authentication.BadCredentialsException;
+	import org.springframework.security.core.userdetails.UsernameNotFoundException;
+	import org.springframework.web.bind.annotation.*;
+	
+	@RestController
+	@RequiredArgsConstructor
+	@RequestMapping("/auth")
+	public class AuthenticationController {
+		
+		private final AuthenticationService authenticationService;
+		
+		@PostMapping("/login")
+		public ResponseEntity<?> login(@RequestBody LoginDto login, HttpServletResponse response) {
+			try {
+				Token tokens = authenticationService.login(login.getEmail(), login.getPassword());
+				response.addHeader("Authorization", "Bearer " + tokens.getAccess());
+				response.addCookie(
+				new Cookie("Refresh", tokens.getRefresh())
+				);
+				return ResponseEntity.noContent().build();
+			}
+			catch (UsernameNotFoundException e) {
+				return ResponseEntity.notFound().build();
+			}
+			catch (BadCredentialsException e) {
+				
+				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+			}
+			catch (Exception e) {
+				return ResponseEntity.internalServerError().build();
+			}
+		}
+		
+	}
+\end{lstlisting}
+
+JwtTokenProvider.java
+\begin{lstlisting}[language=java]
+package com.mymusic.auth.configuration;
+
+import com.mymusic.auth.domain.entities.User;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import java.security.Key;
+import java.time.Instant;
+import java.util.Date;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+
+@Component
+public class JwtTokenProvider {
+	
+	private final String SECRET;
+	@Getter
+	private final long ACCESS_EXPIRATION_IN_SEC;
+	@Getter
+	private final long REFRESH_EXPIRATION_IN_SEC;
+	
+	public JwtTokenProvider(
+	@Value("${jwt.secret}") String secret,
+	@Value("${jwt.access-expiration}") long accessExp,
+	@Value("${jwt.refresh-expiration}") long refreshExp
+	) {
+		this.SECRET = secret;
+		this.ACCESS_EXPIRATION_IN_SEC = accessExp;
+		this.REFRESH_EXPIRATION_IN_SEC = refreshExp;
+	}
+	
+	private Key getSecretKey() {
+		byte[] byteKey = Decoders.BASE64.decode(this.SECRET);
+		return Keys.hmacShaKeyFor(byteKey);
+	}
+	
+	public String generateRefreshToken(User user) {
+		return generateToken(user, REFRESH_EXPIRATION_IN_SEC);
+	}
+	
+	public String generateAccessToken(User user) {
+		return generateToken(user, ACCESS_EXPIRATION_IN_SEC);
+	}
+	
+	public String generateToken(User user, Long expTime) {
+		Claims claims = Jwts.claims()
+		.setSubject(user.getUserId().toString());
+		
+		claims.put("ROLE", user.getRole());
+		
+		var now = Instant.now();
+		claims.setIssuedAt(Date.from(now));
+		claims.setExpiration(Date.from(now.plus(expTime, TimeUnit.SECONDS.toChronoUnit())));
+		
+		return Jwts.builder()
+		.setClaims(claims)
+		.signWith(getSecretKey())
+		.compact();
+	}
+	
+	private Claims extractAllClaims(String token) {
+		return Jwts.parserBuilder()
+		.setSigningKey(getSecretKey())
+		.build()
+		.parseClaimsJws(token)
+		.getBody();
+	}
+	
+	private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+		Claims claims = extractAllClaims(token);
+		return claimsResolver.apply(claims);
+	}
+	
+	private Date extractExpiration(String token) {
+		return extractClaim(token, Claims::getExpiration);
+	}
+	
+	private Long extractUserId(String token) {
+		return Long.valueOf(extractClaim(token, Claims::getSubject));
+	}
+	
+	public boolean isValid(String token, User user) {
+		try {
+			Long userId = user.getUserId();
+			return (Objects.equals(userId, extractUserId(token))) && isExpired(token);
+		}
+		catch (MalformedJwtException e) {
+			return false;
+		}
+	}
+	
+	private boolean isExpired(String token) {
+		var exp = extractClaim(token, Claims::getExpiration);
+		var now = new Date();
+		return now.before(exp);
+	}
+}
+\end{lstlisting}
+\ifВКР{
+\newpage
+\addcontentsline{toc}{section}{На отдельных листах (CD-RW в прикрепленном конверте)}
+\begin{center}
+\textbf{Место для диска}
+\end{center}
+}\fi

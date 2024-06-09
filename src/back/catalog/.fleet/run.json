@@ -1,0 +1,15 @@
+{
+    "configurations": [
+        {
+            "type": "gradle",
+            "name": "Gradle configuration",
+            "tasks": [
+                "bootRun"
+            ],
+            "environment": {
+                
+            },
+        },
+        
+    ]
+}

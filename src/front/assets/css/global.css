@@ -1,0 +1,123 @@
+:root {
+    --black: #020202;
+    --chinese-violet: #70587c;
+    --thistle: #c8b8db;
+    --snow: #f9f4f5ff;
+    --pacific-cyan: #38aecc;
+    --gray: #808080;
+    --gray-50: #8080807f;
+
+    /* theme colours */
+    --background-color: var(--black);
+    --primary-color: var(--pacific-cyan);
+    --secondary-color: var(--thistle);
+    --accent-color: var(--chinese-violet);
+    --primary-text-color: var(--snow);
+    --secondary-text-color: var(--gray);
+}
+
+@font-face {
+    font-family: 'Montserrat', sans-serif;
+    src: url('~assets/fonts/Montserrat-Regular.ttf'),
+    url('~assets/fonts/Montserrat-Regular.ttf');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Montserrat', sans-serif;
+    src: url('~assets/fonts/Montserrat-Bold.ttf'),
+         url('~assets/fonts/Montserrat-Bold.ttf');
+    font-weight: 700;
+    font-style: normal;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html, body, #__nuxt {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    height: 100%;
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    font-size: large;
+    background-color: var(--background-color);
+    color: var(--primary-text-color);
+    margin: 0;
+}
+
+a, a:visited {
+    text-decoration: none;
+    color: var(--accent-color);
+}
+
+button {
+    background-color: var(--accent-color);
+    color: var(--primary-text-color);
+    font-weight: bold;
+    border: none;
+    border-radius: 999px;
+    padding: 0.8rem;
+}
+
+button:hover {
+    cursor: pointer;
+}
+
+label {
+    display: block;
+}
+
+h1 {
+    margin: 0;
+}
+
+input {
+    padding: 0.5em 0;
+    width: 100%;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 100;
+    color: var(--primary-text-color);
+    outline: none;
+    background-color: transparent;
+    border: none;
+    border-bottom: solid 1px var(--primary-text-color);
+    transition: border-color 0.2s;}
+
+input:focus {
+    font-weight: 100;
+    background-color: transparent;
+    border: none;
+    border-bottom: solid 1px var(--accent-color);
+}
+
+::-webkit-scrollbar {
+    background-color: transparent;
+    scrollbar-width: thin;
+    color: var(--primary-text-color);
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background-color: var(--secondary-color);
+}
+
+p {
+    margin: 0;
+}
+
+ul {
+    padding: 0;
+}
+
+ul > li {
+    list-style: none;
+}

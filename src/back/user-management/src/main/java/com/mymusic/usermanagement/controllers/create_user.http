@@ -1,0 +1,10 @@
+### GET request to example server
+POST https://localhost:8020/register
+Content-Type: application/json
+
+{
+  "username": "user6",
+  "email": "user@email.com",
+  "password": "examplePassword"
+}
+###

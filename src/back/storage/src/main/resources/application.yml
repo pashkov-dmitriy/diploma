@@ -1,0 +1,17 @@
+server:
+  port: 8100
+spring:
+  application:
+    name: storage
+  profiles:
+    active: dev
+s3:
+  region: ru-1
+  bucket: de216006-diploma-storage
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: dev

@@ -1,0 +1,43 @@
+spring:
+  profiles:
+    active: dev
+---
+
+spring:
+  application:
+    name: likes
+  cloud:
+    openfeign:
+      client:
+        config:
+          catalog:
+            connect-timeout: 5
+            read-timeout: 5
+          user-management:
+            connect-timeout: 5
+            read-timeout: 5
+server:
+  port: 8086
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+---
+
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:mongodb://localhost:27017/
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: jdbc:mongodb://likes-db:8036
+    username: lkuser
+    password: lkpassword

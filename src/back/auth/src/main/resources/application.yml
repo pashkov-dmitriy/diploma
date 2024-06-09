@@ -1,0 +1,17 @@
+server:
+  port: 8090
+spring:
+  application:
+    name: auth
+eureka:
+  client:
+    enabled: true
+    fetch-registry: true
+    register-with-eureka: true
+jwt:
+  secret: "zt32Sb8Ym3UWqoPwNbh3Ki8BdBlUEPFwnuHUSfeKM2E="
+  access-expiration: 3600000
+  refresh-expiration: 31536000000
+logging:
+  level:
+    org.springframework.security: trace

@@ -1,0 +1,39 @@
+{
+  "name": "nuxt-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "json-server": "json-server --watch db.json --port 8080"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.5.2",
+    "@fortawesome/free-brands-svg-icons": "^6.5.2",
+    "@fortawesome/free-regular-svg-icons": "^6.5.2",
+    "@fortawesome/free-solid-svg-icons": "^6.5.2",
+    "@fortawesome/vue-fontawesome": "^3.0.8",
+    "@pinia/nuxt": "^0.5.1",
+    "axios": "^1.7.2",
+    "date-fns": "^3.6.0",
+    "font-awesome": "^4.7.0",
+    "howler": "^2.2.4",
+    "json-server": "^1.0.0-beta.0",
+    "jwt-decode": "^4.0.0",
+    "miragejs": "^0.1.48",
+    "nuxt": "^3.11.2",
+    "nuxt-helm": "^0.0.2",
+    "nuxt-security": "^2.0.0-beta.5",
+    "nuxt-storage": "^1.2.2",
+    "pinia": "^2.1.7",
+    "primeicons": "^7.0.0",
+    "vee-validate": "^4.12.8",
+    "vue": "^3.4.27",
+    "vue-router": "^4.3.2",
+    "vue3-perfect-scrollbar": "^2.0.0",
+    "yup": "^1.4.0"
+  }
+}
