@@ -15,8 +15,8 @@
 	\continuecaption{Продолжение таблицы\ref{classArtist:table}}
 	\hline \centrow 1 & \centrow 2 & \centrow 3 & \centrow 4\\ \hline
 	\finishhead
-	artistService & private & ArtistService & Объект, отвечающий за бизнес-логику сущности "Artist" \\
-	\hline albumService & private & AlbumService & Объект, отвечающий за бизнес-логику сущности "Album" \\
+	artistService & private & ArtistService & Объект, отвечающий за бизнес-логику сущности "<Artist"> \\
+	\hline albumService & private & AlbumService & Объект, отвечающий за бизнес-логику сущности "<Album"> \\
 	\hline getArtist ById & public & ResponseEntity <ArtistDto> & Возвращает артиста по идентификатору. Входные параметры: id - идентификатор артиста \\
 	\hline getArtist Albums & public & ResponseEntity <ArtistDto> & Возвращает артиста со списком альбомов по идентификатору. Входные параметры: id - идентификатор артиста 
 \end{xltabular}
@@ -34,8 +34,8 @@
 	\continuecaption{Продолжение таблицы \ref{classAlbum:table}}
 	\hline \centrow 1 & \centrow 2 & \centrow 3 & \centrow 4\\ \hline
 	\finishhead
-	albumService & private & AlbumService & Объект, отвечающий за бизнес-логику сущности "Album" \\
-	\hline trackService & private & TrackService & Объект, отвечающий за бизнес-логику сущности "Track" \\
+	albumService & private & AlbumService & Объект, отвечающий за бизнес-логику сущности "<Album"> \\
+	\hline trackService & private & TrackService & Объект, отвечающий за бизнес-логику сущности "<Track"> \\
 	\hline getAlbum ById & public & ResponseEntity <AlbumDto> & Возвращает альбом по идентификатору. Входные параметры: id - идентификатор альбома 
 \end{xltabular}
 
@@ -50,7 +50,7 @@
 	\continuecaption{Продолжение таблицы \ref{classPlaylist:table}}
 	\hline \centrow 1 & \centrow 2 & \centrow 3 & \centrow 4\\ \hline
 	\finishhead
-	playlist Service & private & PlaylistService & Объект, отвечающий за бизнес-логику сущности "Playlist" \\
+	playlist Service & private & PlaylistService & Объект, отвечающий за бизнес-логику сущности "<Playlist"> \\
 	\hline getPlaylist Info & public & ResponseEntity <PlaylistDetailsDto> & Возвращает информацию о плейлисте по идентификатору. Входные параметры: id - идентификатор плейлиста \\
 	\hline getPlaylist Tracklist & public & ResponseEntity <PlaylistTracklistDto> & Возвращает список треков плейлиста по идентификатору. Входные параметры: id - идентификатор плейлиста \\
 	\hline createNew Playlist & public & ResponseEntity <PlaylistCreatedDto> & Создает новый плейлист. Входные параметры: newPlaylist - объект, содержащий данные нового плейлиста \\
@@ -72,7 +72,7 @@
 	\continuecaption{Продолжение таблицы \ref{classTrack:table}}
 	\hline \centrow 1 & \centrow 2 & \centrow 3 & \centrow 4\\ \hline
 	\finishhead
-	trackService & private & TrackService & Объект, отвечающий за бизнес-логику сущности "Track" \\
+	trackService & private & TrackService & Объект, отвечающий за бизнес-логику сущности "<Track"> \\
 	\hline isTrackExists & public & ResponseEntity <BooleanResponse> & Проверяет существование трека по идентификатору. Входные параметры: id - идентификатор трека \\
 \end{xltabular}
 \renewcommand{\arraystretch}{1.0}
@@ -165,7 +165,7 @@
 	\hline \centrow 1 & \centrow 2 & \centrow 3 & \centrow 4\\ \hline
 	\finishhead
 	playlistRepo sitory & private & PlaylistRepository & Репозиторий, отвечающий за доступ к данным плейлистов \\
-	\hline trackService & private & TrackService & Объект, отвечающий за бизнес-логику сущности "Track" \\
+	\hline trackService & private & TrackService & Объект, отвечающий за бизнес-логику сущности "<Track"> \\
 	\hline userManagement Client & private & UserManage mentClient & Объект, отвечающий за взаимодействие с сервисом управления пользователями \\
 	\hline getTracksBy PlaylistId & public & Set <Track> & Возвращает треки плейлиста по идентификатору. Входные параметры: playlistId - идентификатор плейлиста \\
 	\hline getPlaylist ById & public & Optional <Playlist> & Возвращает плейлист по идентификатору. Входные параметры: playlistId - идентификатор плейлиста \\
@@ -475,81 +475,63 @@ void isValid_ShouldReturnTrueForValidToken() {
 Системное тестирование является типом тестирования программного обеспечения, направленным на проверку полной интегрированной системы. На этом этапе тестируется вся система в целом, чтобы удостовериться, что все компоненты и модули работают вместе согласно требованиям спецификации. В отличие от модульного тестирования, которое фокусируется на отдельных частях программы, системное тестирование проверяет взаимодействие между различными компонентами и оценивает поведение системы в реальных условиях эксплуатации.
 Системное тестирование проводится в среде, максимально приближенной к реальной эксплуатационной среде, что позволяет выявить проблемы, которые могут возникнуть в процессе использования программного обеспечения конечными пользователями.
 При входе в web-приложение неаутентифицированного пользователя, ему предлагается войти в систему. Система в данном состоянии представлена на рисунке \ref{stestLoginEmpty:image}.
-\begin{figure}[!htb]
-\center{\includegraphics[width=1\linewidth]{stestLoginEmpty}}
-\caption{Система в состоянии "Пользователь не аутентифицирован"}
+\begin{figure}[H]
+\center{\includegraphics[width=0.8\linewidth]{stestLoginEmpty}}
+\caption{Система в состоянии "<Пользователь не аутентифицирован">}
 \label{stestLoginEmpty:image}
 \end{figure}
-В случае наличия аутентификационных данных, пользователь может выполнить вход в систему. В случае отсутствия аутентификационных данных пользователь может перейти на страницу регистрации. Система в состоянии "Регистрация пользователя" представлена на рисунке \ref{stestReg:image}.
-
-\begin{figure}[!htb]
-	\center{\includegraphics[width=1\linewidth]{stestReg}}
-	\caption{Система в состоянии "Регистрация пользователя"}
+В случае наличия аутентификационных данных, пользователь может выполнить вход в систему. В случае отсутствия аутентификационных данных пользователь может перейти на страницу регистрации. Система в состоянии "<Регистрация пользователя"> представлена на рисунке \ref{stestReg:image}.
+\begin{figure}[H]
+	\center{\includegraphics[width=0.8\linewidth]{stestReg}}
+	\caption{Система в состоянии "<Регистрация пользователя">}
 	\label{stestReg:image}
 \end{figure}
-
 После успешной регистрации пользователь вновь попадает на страницу входа, где успешно проходит аутенификацию. После этого пользователь попадает на главную страницу сайта. Данное состояние продемонстрировано на рисунке \ref{stestHome:image}.
-
 \begin{figure}[!htb]
-	\center{\includegraphics[width=1\linewidth]{stestHome}}
-	\caption{Система в состоянии "Главная страница"}
+	\center{\includegraphics[width=0.8\linewidth]{stestHome}}
+	\caption{Система в состоянии "<Главная страница">}
 	\label{stestHome:image}
 \end{figure}
-
-Пользователь может осуществить поиск контента по строке в одной из категорий: "артист", "альбом" и "плейлист". В случае наличия контента пользователь получит список ссылок. Если же запрашиваемый контент не найден, то пользователь видит соответствующее сообщение. Система в состоянии "Успешный поиск" представлена на рисунке \ref{stestSearchSuc:image}.
-
-\begin{figure}[!htb]
+Пользователь может осуществить поиск контента по строке в одной из категорий: "<артист">, "<альбом"> и "<плейлист">. В случае наличия контента пользователь получит список ссылок. Если же запрашиваемый контент не найден, то пользователь видит соответствующее сообщение. Система в состоянии "Успешный поиск" представлена на рисунке \ref{stestSearchSuc:image}.
+\begin{figure}[H]
 	\center{\includegraphics[width=1\linewidth]{stestSearchSuc}}
-	\caption{Система в состоянии "Успешный поиск"}
+	\caption{Система в состоянии "<Успешный поиск">}
 	\label{stestSearchSuc:image}
 \end{figure}
-
-Система в состоянии "Неудачный поиск" представлена на рисунке \ref{stestSearchFail:image}.
-
-\begin{figure}[!htb]
-	\center{\includegraphics[width=1\linewidth]{stestSearchFail}}
-	\caption{Система в состоянии "Неудачный поиск"}
+Система в состоянии "<Неудачный поиск"> представлена на рисунке \ref{stestSearchFail:image}.
+\begin{figure}[H]
+	\center{\includegraphics[width=0.9\linewidth]{stestSearchFail}}
+	\caption{Система в состоянии "<Неудачный поиск">}
 	\label{stestSearchFail:image}
 \end{figure}
-
 В случае успешного поиска пользователь может перейти по ссылкам результата поиска. В этом случае пользователь попадает на страницу с контентом, например на страницу артиста. Система в этом состоянии представлена на рисунке \ref{stestArtist:image}.
-
-\begin{figure}[!htb]
-	\center{\includegraphics[width=1\linewidth]{stestArtist}}
-	\caption{Система в состоянии "Страница артиста"}
+\begin{figure}[H]
+	\center{\includegraphics[width=0.8\linewidth]{stestArtist}}
+	\caption{Система в состоянии "<Страница артиста">}
 	\label{stestArtist:image}
 \end{figure}
-
 Пользователь может перейти к одному из альбомов артиста, кликнув по имени альбома. В этом случае пользователь попадает на страницу альбома. Система в этом состоянии представлена на рисунке \ref{stestAlbum:image}.
-
-\begin{figure}[!htb]
-	\center{\includegraphics[width=1\linewidth]{stestAlbum}}
-	\caption{Система в состоянии "Страница альбома"}
+\begin{figure}[H]
+	\center{\includegraphics[width=0.8\linewidth]{stestAlbum}}
+	\caption{Система в состоянии "<Страница альбома">}
 	\label{stestAlbum:image}
 \end{figure}
-
-Пользователь может воспроизвести трек, щелкнув по иконке "играть". В этом случае плеер внизу экрана отобразит данные трека и начнется воспроизведение трека. Система в этом состоянии отображена на рисунке \ref{stestPlayer:image}.
-
-\begin{figure}[!htb]
-	\center{\includegraphics[width=1\linewidth]{stestPlayer}}
-	\caption{Система в состоянии "Воспроизведение  трека"}
+Пользователь может воспроизвести трек, щелкнув по иконке "<играть">. В этом случае плеер внизу экрана отобразит данные трека и начнется воспроизведение трека. Система в этом состоянии отображена на рисунке \ref{stestPlayer:image}.
+\begin{figure}[H]
+	\center{\includegraphics[width=0.8\linewidth]{stestPlayer}}
+	\caption{Система в состоянии "<Воспроизведение  трека">}
 	\label{stestPlayer:image}
 \end{figure}
-
 Пользователь может получить доступ к своей странице. Для этого ему необходимо щелкнуть по кнопке с иконкой пользователя в верхней части приложения. В этом случае откроется страница пользователя. Система в этом состоянии изображена на рисунке \ref{stestUserBefore:image}.
-
-\begin{figure}[!htb]
-	\center{\includegraphics[width=1\linewidth]{stestUserBefore}}
-	\caption{Система в состоянии "Страница пользователя"}
+\begin{figure}[H]
+	\center{\includegraphics[width=0.8\linewidth]{stestUserBefore}}
+	\caption{Система в состоянии "<Страница пользователя">}
 	\label{stestUserBefore:image}
 \end{figure}
-
-
-Пользователь может получить изменить данные на своей странице. Для этого ему необходимо ввести новые данные в форме на странице, а затем подтвердить изменения, нажав на кнопку "Сохранить изменения". Система в этом состоянии изображена на рисунке \ref{stestUserAfter:image}.
-
-\begin{figure}[!htb]
-	\center{\includegraphics[width=1\linewidth]{stestUserAfter}}
-	\caption{Система в состоянии "Изменение данных"}
+Пользователь может получить изменить данные на своей странице. Для этого ему необходимо ввести новые данные в форме на странице, а затем подтвердить изменения, нажав на кнопку "<Сохранить изменения">. Система в этом состоянии изображена на рисунке \ref{stestUserAfter:image}.
+\begin{figure}[H]
+	\center{\includegraphics[width=0.8\linewidth]{stestUserAfter}}
+	\caption{Система в состоянии "<Изменение данных">}
 	\label{stestUserAfter:image}
 \end{figure}
 \clearpage
